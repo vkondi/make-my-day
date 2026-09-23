@@ -393,8 +393,8 @@ export default function App() {
       <div className="atmosphere" aria-hidden="true" />
 
       <section className="toy-stage" data-state={viewState} aria-live="polite">
-        <p className="brand-line">Make My Day</p>
-        <h1 className="hero-title">One tiny prediction for today.</h1>
+        {/* <p className="brand-line">Make My Day</p> */}
+        <h1 className="hero-title">One tiny prediction for today</h1>
 
         <button
           className="make-day-button"
