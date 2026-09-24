@@ -13,6 +13,8 @@ const categoryMeta: Record<PredictionCategory, PredictionCategoryMeta> = {
   indian_edition: { label: 'Indian Edition', emoji: '🇮🇳' }
 };
 
+const SEEN_PREDICTIONS_KEY = 'make-my-day-seen-predictions';
+
 export type PredictionResult = PredictionEntry & {
   categoryMeta: PredictionCategoryMeta;
 };
@@ -42,6 +44,25 @@ export function getMoodEmoji(mood: PredictionMood): string {
   }
 }
 
+function getSeenPredictions(): Set<string> {
+  try {
+    const stored = window.localStorage.getItem(SEEN_PREDICTIONS_KEY);
+    return new Set(stored ? JSON.parse(stored) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSeenPrediction(predictionId: string): void {
+  try {
+    const seen = getSeenPredictions();
+    seen.add(predictionId);
+    window.localStorage.setItem(SEEN_PREDICTIONS_KEY, JSON.stringify(Array.from(seen)));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
 function weightedPick(catalog: readonly PredictionEntry[]): PredictionEntry {
   const totalWeight = catalog.reduce((sum, entry) => sum + entry.rarity, 0);
   const target = Math.random() * totalWeight;
@@ -58,11 +79,29 @@ function weightedPick(catalog: readonly PredictionEntry[]): PredictionEntry {
 }
 
 export function generatePrediction(previousId: string | null): PredictionResult {
-  const pool = previousId
-    ? predictionCatalog.filter((entry) => entry.id !== previousId)
-    : [...predictionCatalog];
+  const seen = getSeenPredictions();
+  const totalPredictions = predictionCatalog.length;
+  const hasSeenAllPredictions = seen.size >= totalPredictions;
+
+  let pool = [...predictionCatalog];
+
+  // Filter out the previous prediction to avoid immediate consecutive duplicates
+  if (previousId) {
+    pool = pool.filter((entry) => entry.id !== previousId);
+  }
+
+  // Only allow unseen predictions until user has seen all predictions
+  if (!hasSeenAllPredictions) {
+    const unseenPool = pool.filter((entry) => !seen.has(entry.id));
+    if (unseenPool.length > 0) {
+      pool = unseenPool;
+    }
+  }
 
   const next = weightedPick(pool.length > 0 ? pool : predictionCatalog);
+  
+  // Track this prediction as seen
+  saveSeenPrediction(next.id);
 
   return {
     ...next,
