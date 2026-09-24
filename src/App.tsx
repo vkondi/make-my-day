@@ -5,6 +5,7 @@ import {
   getMoodEmoji,
   type PredictionResult
 } from './prediction-engine';
+import { Footer } from './Footer';
 
 type ViewState = 'idle' | 'generating' | 'revealed';
 type AnticipationPhase = 'idle' | 'hmm' | 'consulting' | 'invoking';
@@ -389,8 +390,9 @@ export default function App() {
   }, [isReturningToday, serial]);
 
   return (
-    <main className="app-shell" data-state={viewState}>
-      <div className="atmosphere" aria-hidden="true" />
+    <>
+      <main className="app-shell" data-state={viewState}>
+        <div className="atmosphere" aria-hidden="true" />
 
       <section className="toy-stage" data-state={viewState} aria-live="polite">
         {/* <p className="brand-line">Make My Day</p> */}
@@ -447,5 +449,8 @@ export default function App() {
         ) : null}
       </section>
     </main>
+
+    <Footer />
+    </>
   );
 }
